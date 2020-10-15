@@ -91,18 +91,17 @@ def lcd_car_out(the_plate):
     time.sleep(5)
     lcd.clearDisplay(0)     # Complete deletion of the display    
     
-def show_remain_place(now_place):
+def show_remain_place(now_place,reserved_place):
     lcd.init()              # Basic HW system setup - port directions on the expander and reset the display
     lcd.clearDisplay(0)     # Complete deletion of the display
 
     lcd.initTextMode()     # Switch to text mode
 
     lcd.printStringTextMode("Remain Place :",0,0)   # Display the text in the text mode at specified coordinates
-    lcd.printStringTextMode(now_place,0,1)
-    lcd.printStringTextMode("Thanks you!",0,2)
-    time.sleep(10)
+    lcd.printStringTextMode(str(now_place),0,1)
+    lcd.printStringTextMode("Reserved Place :",0,2)   # Display the text in the text mode at specified coordinates
+    lcd.printStringTextMode(str(reserved_place),0,3)
 
-    lcd.clearDisplay(0)     # Complete deletion of the display
-#if __name__ == '__main__':
-    
+if __name__ == '__main__':
+    entrance_recognize_and_indicate('/home/pi/pytest/final_project/5978YA.jpg')
     

@@ -2,7 +2,7 @@
 import time
 import datetime
 from firebase_action import firebase_action as data_action
-
+from auto_recognize import lcd_car_out
 class ParkManage(object):
     """建立一個關於停車的類"""
     def __init__(self,max_car=3,):  #定義最大停車輛數
@@ -30,10 +30,12 @@ class ParkManage(object):
 {0}
 {2}           6)統計車輛資訊{3}{2}
 {0}
-{2}              7)退出系統{3}{2}
+{2}              7)手動繳費{3}{2}
+{0}
+{2}              8)退出系統{3}{2}
 {1}
         """.format("-"*40,"="*40,"|"," "*16))
-
+ 
     def add_car(self,car):
         """#新增車輛資訊"""
         entrance_time = time.time() #計時開始
@@ -42,18 +44,19 @@ class ParkManage(object):
         entrance_time_2 = datetime.datetime.now().replace(tzinfo=None)
         reserved_time  = car.reserved_time.replace(tzinfo=None)
         delay_time = (entrance_time_2 - reserved_time).seconds
-        car["order"] = data_action.firebase_Read_Reserved_Car_Order(car.car_number)
-        print(car.order)
-        car.balance = data_action.firebase_Read_Users_Balance(car.order)
+        car["User_uid"] = data_action.firebase_Read_Reserved_User_uid(car.car_number)
+        print(car.User_uid)
+        car.balance = data_action.firebase_Read_Users_Balance(car.User_uid)
         
         for Car in self.car_list:
-            if Car.car_number == car.car_number or delay_time>1800:
+            if Car.car_number == car.car_number: 
                 print("車牌號資訊有誤，重新輸入")
                 break
+            if delay_time > 30:
+                data_action.firebase_Car_Overtime_thirty()
         else:
-            if delay_time > 900:
-                car.balance -= 30 #1hr fee
-            data_action.firebase_Car_Enter_Add_and_Update(car.car_number,car.order) #modify database
+            
+            data_action.firebase_Car_Enter_Add_and_Update(car.car_number,car.User_uid,car.order_number) #modify database
             self.car_list.append(car)
             print("車牌號為%s的車入庫成功" %car.car_number)
 
@@ -84,7 +87,7 @@ class ParkManage(object):
 
     def change_Carinfo(self):
         """#修改車輛資訊"""
-        car_number = input("請輸入你您要查詢的車牌號：")
+        car_number = input("請輸入您要查詢的車牌號：")
         for car in self.car_list:
             if car.car_number == car_number:
                 index=self.car_list.index(car)
@@ -131,9 +134,12 @@ class ParkManage(object):
         """刪除車輛資訊"""
         exit_time=time.time()  #計時結束
         car["exit_time"]=exit_time
-        rest_money = car.slot_card()
-        print(car.order)
-        data_action.firebase_Change_Users_Balance(car.order,rest_money)#modify database
+        money_data = car.slot_card()
+        rest_money = money_data[0]
+        pay = money_data[1]
+        total_time = money_data[2]
+        print(car.User_uid)
+        data_action.firebase_Change_Users_Balance_Time(car.User_uid,car.order_number,rest_money,pay,total_time)#modify database
         self.car_list.remove(car)
         print("車牌號為%s的車成功刪除"%car.car_number)
 
@@ -149,3 +155,28 @@ class ParkManage(object):
                   %(sedan_car_number))
         rest_space = self.max_car-sedan_car_number
         print("剩餘車位%s" %rest_space)
+    
+    def pay_by_staff(self):
+        """手動繳費"""
+        car_number = input("請輸入您要的車牌號碼：")
+        for car in self.car_list:
+            if car.car_number == car_number:
+                exit_time=time.time()  #計時結束
+                car["exit_time"]=exit_time
+                money_data = car.slot_card()
+                print(money_data)
+                rest_money = money_data[0]
+                pay = money_data[1]
+                total_time = money_data[2]
+                print("應付金額：",pay)
+                input_pay = eval(input("請輸入繳費金額："))
+                if input_pay == pay:
+                    print("謝謝光臨！")
+                    lcd_car_out(car_number)
+                    #data_action.firebase_Car_Exit_and_Update(car_number,car.User_uid,car.order_number)
+                    self.car_list.remove(car)
+                    print("車牌號為%s的車成功刪除"%car.car_number)
+                else:
+                    print("Money Not correct!")
+#if __name__ == '__main__':
+    

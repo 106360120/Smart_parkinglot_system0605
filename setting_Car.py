@@ -4,7 +4,7 @@ from setting_Manage import ParkManage
 
 class Car():
     """一個關於車的類"""
-    def __init__(self,car_number,reserved_time):
+    def __init__(self,car_number,reserved_time,User_uid,order_number):
         super(Car, self).__init__()
         self.car_number=car_number
         #self.car_owner=car_owner
@@ -14,8 +14,9 @@ class Car():
         self.exit_time = 0
         self.should_leave_time = 0
         self.reserved_time = reserved_time
-        self.order = 0
-        #self.pay = 0
+        self.User_uid = User_uid
+        self.order_number = order_number
+
 
     def __setitem__(self, key, value):
         self.__dict__[key]=value
@@ -44,12 +45,15 @@ class Car():
         else:
             s=0
         consumption = d*240 + h*30
+        a = []
         self.balance -= consumption
-        #money_data = [self.balance,self.pay]
-        return self.balance
+        a.append(self.balance)
+        a.append(consumption)
+        a.append(park_time)
+        return a
         
         print("車牌號為:%s\n停車時長:%s\n本次消費:%.2f元\n卡里餘額:%.2f元\n" % (self.car_number,P_time, self.pay, self.balance))
 
     def __str__(self): 
         '''將汽車資訊顯示成字串'''
-        return "%s %s %s %s" %(self.car_number,self.car_owner,self.contact_way,self.entrance_time)
+        return "%s %s " %(self.car_number,self.entrance_time)
